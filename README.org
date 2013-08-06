@@ -24,3 +24,6 @@ to fix that.
   To switch between desktops you can use
   =desktop-registry-change-desktop=, this will prompt (with completion)
   for the directory you would like to load.
+
+  When you're done with a desktop or want to get rid of a desktop for
+  another reason you can use =desktop-registry-remove-desktop=.

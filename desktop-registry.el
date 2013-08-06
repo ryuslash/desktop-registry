@@ -63,12 +63,26 @@
     (error "No desktop loaded"))
   (desktop-registry-add-directory desktop-dirname))
 
+(defun desktop-registry--completing-read ()
+  "Ask the user to pick a desktop directory."
+  (completing-read "Directory: " desktop-registry-registry nil nil
+                   nil 'desktop-registry--history))
+
+;;;###autoload
+(defun desktop-registry-remove-desktop (desktop)
+  "Remove DESKTOP from the desktop registry."
+  (interactive (list (desktop-registry--completing-read)))
+  (let ((spec (assoc desktop desktop-registry-registry)))
+    (if spec
+        (customize-save-variable
+         'desktop-registry-registry
+         (delete spec desktop-registry-registry))
+      (error "Unknown desktop: %s" desktop))))
+
 ;;;###autoload
 (defun desktop-registry-change-desktop (name)
   "Change to the desktop named NAME."
-  (interactive
-   (list (completing-read "Directory: " desktop-registry-registry nil nil
-                          nil 'desktop-registry--history)))
+  (interactive (list (desktop-registry--completing-read)))
   (desktop-change-dir (cdr (assoc name desktop-registry-registry))))
 
 ;;;###autoload

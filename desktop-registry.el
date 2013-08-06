@@ -44,11 +44,27 @@
 (defvar desktop-registry--history nil
   "History variable for `desktop-registry'.")
 
+(defun desktop-registry--canonicalize-dir (dir)
+  "Canonicalize DIR for use."
+  (directory-file-name (expand-file-name dir)))
+
+;;;###autoload
+(defun desktop-registry-current-desktop ()
+  "Get the name of the currently loaded desktop.
+
+Returns an empty string when `desktop-dirname' is nil."
+  (if desktop-dirname
+      (let ((canonical
+             (desktop-registry--canonicalize-dir desktop-dirname)))
+        (car (cl-find-if (lambda (d) (equal (cdr d) canonical))
+                         desktop-registry-registry)))
+    ""))
+
 ;;;###autoload
 (defun desktop-registry-add-directory (dir)
   "Add DIR to the desktop registry."
   (interactive "DDirectory: ")
-  (let* ((clean-dir (directory-file-name (expand-file-name dir)))
+  (let* ((clean-dir (desktop-registry--canonicalize-dir dir))
          (label (file-name-base clean-dir)))
     (unless (assoc label desktop-registry-registry)
       (customize-save-variable

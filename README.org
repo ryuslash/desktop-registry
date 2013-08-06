@@ -27,3 +27,14 @@ to fix that.
 
   When you're done with a desktop or want to get rid of a desktop for
   another reason you can use =desktop-registry-remove-desktop=.
+
+** With org-capture-templates
+
+   The =desktop-registry-current-desktop= can be used to insert the
+   currently loaded desktop into an org capture template.
+
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'org-capture-templates
+                  '("t" "Task" entry nil
+                    "* TODO %?  :%(desktop-registry-current-desktop):"))
+   #+END_SRC

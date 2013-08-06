@@ -5,3 +5,6 @@
 
   - Add =desktop-registry-remove-desktop= command to remove desktops you
     no longer (want to) use.
+
+  - Add =desktop-registry-current-desktop= function to get the name of
+    the currently loaded desktop.

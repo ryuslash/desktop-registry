@@ -96,6 +96,18 @@ Returns an empty string when `desktop-dirname' is nil."
       (error "Unknown desktop: %s" desktop))))
 
 ;;;###autoload
+(defun desktop-registry-rename-desktop (old new)
+  "Rename DESKTOP."
+  (interactive (list (desktop-registry--completing-read)
+                     (read-string "to: ")))
+  (let ((spec (assoc old desktop-registry-registry)))
+    (if (not spec)
+        (error "Unknown desktop: %s" old)
+      (setf (car spec) new)
+      (customize-save-variable 'desktop-registry-registry
+                               desktop-registry-registry))))
+
+;;;###autoload
 (defun desktop-registry-change-desktop (name)
   "Change to the desktop named NAME."
   (interactive (list (desktop-registry--completing-read)))

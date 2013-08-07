@@ -8,3 +8,5 @@
 
   - Add =desktop-registry-current-desktop= function to get the name of
     the currently loaded desktop.
+
+  - Add =desktop-registry-rename-desktop= command to rename a desktop.

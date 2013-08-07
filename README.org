@@ -1,4 +1,3 @@
-#+TITLE: Desktop registry
 #+STARTUP: showall
 
 After reading [[https://ericjmritz.wordpress.com/2013/05/28/emacs-desktops/][this post]] I started using =desktop.el= as a simple project

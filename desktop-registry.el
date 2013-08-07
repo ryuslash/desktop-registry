@@ -1,5 +1,4 @@
-;; -*- lexical-binding: t -*-
-;;; desktop-registry.el --- Keep a central registry of desktop files
+;;; desktop-registry.el --- Keep a central registry of desktop files -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2013  Tom Willemse
 

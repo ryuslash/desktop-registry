@@ -81,7 +81,11 @@ Returns DEFAULT when `desktop-dirname' is nil."
 
 (defun desktop-registry--completing-read (&optional prompt
                                                     default-current)
-  "Ask the user to pick a desktop directory."
+  "Ask the user to pick a desktop directory.
+
+PROMPT specifies the prompt to use when asking, which defaults to
+\"Desktop: \". DEFAULT-CURRENT specifies whether to use the
+current desktop as default value."
   (let ((prompt (or prompt "Desktop: "))
         (default (and default-current
                       (desktop-registry-current-desktop))))
@@ -101,7 +105,7 @@ Returns DEFAULT when `desktop-dirname' is nil."
 
 ;;;###autoload
 (defun desktop-registry-rename-desktop (old new)
-  "Rename DESKTOP."
+  "Rename desktop OLD to NEW."
   (interactive (list (desktop-registry--completing-read "Rename: " t)
                      (read-string "to: ")))
   (let ((spec (assoc old desktop-registry-registry)))

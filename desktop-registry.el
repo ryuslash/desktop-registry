@@ -79,15 +79,16 @@ Returns an empty string when `desktop-dirname' is nil."
     (error "No desktop loaded"))
   (desktop-registry-add-directory desktop-dirname))
 
-(defun desktop-registry--completing-read ()
+(defun desktop-registry--completing-read (&optional prompt)
   "Ask the user to pick a desktop directory."
-  (completing-read "Directory: " desktop-registry-registry nil nil
-                   nil 'desktop-registry--history))
+  (let ((prompt (or prompt "Desktop: ")))
+    (completing-read prompt desktop-registry-registry nil nil nil
+                     'desktop-registry--history)))
 
 ;;;###autoload
 (defun desktop-registry-remove-desktop (desktop)
   "Remove DESKTOP from the desktop registry."
-  (interactive (list (desktop-registry--completing-read)))
+  (interactive (list (desktop-registry--completing-read "Remove: ")))
   (let ((spec (assoc desktop desktop-registry-registry)))
     (if spec
         (customize-save-variable
@@ -98,7 +99,7 @@ Returns an empty string when `desktop-dirname' is nil."
 ;;;###autoload
 (defun desktop-registry-rename-desktop (old new)
   "Rename DESKTOP."
-  (interactive (list (desktop-registry--completing-read)
+  (interactive (list (desktop-registry--completing-read "Rename: ")
                      (read-string "to: ")))
   (let ((spec (assoc old desktop-registry-registry)))
     (if (not spec)
@@ -110,7 +111,7 @@ Returns an empty string when `desktop-dirname' is nil."
 ;;;###autoload
 (defun desktop-registry-change-desktop (name)
   "Change to the desktop named NAME."
-  (interactive (list (desktop-registry--completing-read)))
+  (interactive (list (desktop-registry--completing-read "Switch to: ")))
   (desktop-change-dir (cdr (assoc name desktop-registry-registry))))
 
 ;;;###autoload

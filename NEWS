@@ -10,3 +10,5 @@
     the currently loaded desktop.
 
   - Add =desktop-registry-rename-desktop= command to rename a desktop.
+
+  - Specify prompts for each action that wants a desktop selected.

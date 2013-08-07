@@ -1,7 +1,7 @@
 # -*- mode: org; -*-
 #+STARTUP: showall
 
-* Development
+* 1.1.0
 
   - Add =desktop-registry-remove-desktop= command to remove desktops you
     no longer (want to) use.

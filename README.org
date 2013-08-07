@@ -14,13 +14,6 @@ to fix that.
 
 * Usage
 
-  You can use =desktop-registry-prepend-directory= to add a new
-  directory to the registry, or
-  =desktop-registry-prepend-current-desktop= to add the currently loaded
-  desktop to the registry. If you enable
-  =desktop-registry-auto-register= it will automatically add new desktop
-  files to the registry when you use =desktop-save=.
-
   To switch between desktops you can use
   =desktop-registry-change-desktop=, this will prompt (with completion)
   for the directory you would like to load.
@@ -31,6 +24,17 @@ to fix that.
   If you've registered a desktop and you don't like what it made of
   the name you can use =desktop-registry-rename-desktop= to give it a
   new name.
+
+** Adding new desktops
+
+   You can use =desktop-registry-add-directory= to add a new directory
+   to the registry, or =desktop-registry-add-current-desktop= to add the
+   currently loaded desktop to the registry. With either of these
+   function you can use the universal argument (=C-u=) to specify a
+   name for the desktop as well.
+
+   If you enable =desktop-registry-auto-register= it will automatically
+   add new desktop files to the registry when you use =desktop-save=.
 
 ** With org-capture-templates
 

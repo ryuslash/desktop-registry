@@ -12,3 +12,10 @@
   - Add =desktop-registry-rename-desktop= command to rename a desktop.
 
   - Specify prompts for each action that wants a desktop selected.
+
+  - Allow specifying of desktop name by using the universal argument.
+
+  - Signal an error when the name for a desktop (either specified or
+    generated) already exists in the registry and show a message when
+    the specified directory has already been registered. Only add the
+    directory if neither of these conditions occur.

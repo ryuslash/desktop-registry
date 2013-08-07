@@ -60,23 +60,33 @@ Returns DEFAULT when `desktop-dirname' is nil."
     default))
 
 ;;;###autoload
-(defun desktop-registry-add-directory (dir)
-  "Add DIR to the desktop registry."
-  (interactive "DDirectory: ")
+(defun desktop-registry-add-directory (dir &optional name)
+  "Add DIR to the desktop registry, possibly using NAME."
+  (interactive (list (read-directory-name "Directory: ")
+                     (if (equal current-prefix-arg '(4))
+                         (read-string "Name: "))))
   (let* ((clean-dir (desktop-registry--canonicalize-dir dir))
-         (label (file-name-base clean-dir)))
-    (unless (assoc label desktop-registry-registry)
-      (customize-save-variable
-       'desktop-registry-registry
-       (cons (cons label clean-dir) desktop-registry-registry)))))
+         (label (or name (file-name-base clean-dir))))
+    (cond
+     ((cl-find clean-dir desktop-registry-registry
+               :key 'cdr :test 'equal)
+      (message "Directory %s already registered" clean-dir))
+     ((cl-find label desktop-registry-registry :key 'car :test 'equal)
+      (error "Name %s already used" label))
+     (t (customize-save-variable
+         'desktop-registry-registry
+         (cons (cons label clean-dir) desktop-registry-registry))))))
 
 ;;;###autoload
-(defun desktop-registry-add-current-desktop ()
-  "Add the currently opened desktop file to `desktop-registry-registry'."
-  (interactive)
+(defun desktop-registry-add-current-desktop (&optional name)
+  "Add the currently opened desktop file to `desktop-registry-registry'.
+
+If NAME is specified use that as the name for the registry entry."
+  (interactive (list (if (equal current-prefix-arg '(4))
+                         (read-string "Name: "))))
   (unless desktop-dirname
     (error "No desktop loaded"))
-  (desktop-registry-add-directory desktop-dirname))
+  (desktop-registry-add-directory desktop-dirname name))
 
 (defun desktop-registry--completing-read (&optional prompt
                                                     default-current)

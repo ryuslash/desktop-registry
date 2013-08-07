@@ -40,5 +40,5 @@ to fix that.
    #+BEGIN_SRC emacs-lisp
      (add-to-list 'org-capture-templates
                   '("t" "Task" entry nil
-                    "* TODO %?  :%(desktop-registry-current-desktop):"))
+                    "* TODO %?  :%(desktop-registry-current-desktop \"\"):"))
    #+END_SRC

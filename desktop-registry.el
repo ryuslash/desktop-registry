@@ -49,16 +49,16 @@
   (directory-file-name (expand-file-name dir)))
 
 ;;;###autoload
-(defun desktop-registry-current-desktop ()
+(defun desktop-registry-current-desktop (&optional default)
   "Get the name of the currently loaded desktop.
 
-Returns an empty string when `desktop-dirname' is nil."
+Returns DEFAULT when `desktop-dirname' is nil."
   (if desktop-dirname
       (let ((canonical
              (desktop-registry--canonicalize-dir desktop-dirname)))
         (car (cl-find-if (lambda (d) (equal (cdr d) canonical))
                          desktop-registry-registry)))
-    ""))
+    default))
 
 ;;;###autoload
 (defun desktop-registry-add-directory (dir)
@@ -79,16 +79,19 @@ Returns an empty string when `desktop-dirname' is nil."
     (error "No desktop loaded"))
   (desktop-registry-add-directory desktop-dirname))
 
-(defun desktop-registry--completing-read (&optional prompt)
+(defun desktop-registry--completing-read (&optional prompt
+                                                    default-current)
   "Ask the user to pick a desktop directory."
-  (let ((prompt (or prompt "Desktop: ")))
+  (let ((prompt (or prompt "Desktop: "))
+        (default (and default-current
+                      (desktop-registry-current-desktop))))
     (completing-read prompt desktop-registry-registry nil nil nil
-                     'desktop-registry--history)))
+                     'desktop-registry--history default)))
 
 ;;;###autoload
 (defun desktop-registry-remove-desktop (desktop)
   "Remove DESKTOP from the desktop registry."
-  (interactive (list (desktop-registry--completing-read "Remove: ")))
+  (interactive (list (desktop-registry--completing-read "Remove: " t)))
   (let ((spec (assoc desktop desktop-registry-registry)))
     (if spec
         (customize-save-variable
@@ -99,7 +102,7 @@ Returns an empty string when `desktop-dirname' is nil."
 ;;;###autoload
 (defun desktop-registry-rename-desktop (old new)
   "Rename DESKTOP."
-  (interactive (list (desktop-registry--completing-read "Rename: ")
+  (interactive (list (desktop-registry--completing-read "Rename: " t)
                      (read-string "to: ")))
   (let ((spec (assoc old desktop-registry-registry)))
     (if (not spec)

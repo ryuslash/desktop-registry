@@ -1,6 +1,19 @@
 # -*- mode: org; -*-
 #+STARTUP: showall
 
+* 1.2.0
+
+  - Add =desktop-registry-list-desktops= command for easy management of
+    registered desktops.
+
+  - Use =file-name-nondirectory= instead of =file-name-base= when naming a
+    new desktop. This way these names won't lose anything after a ~.~
+    (dot).
+
+  - Update documentation strings and comments.
+
+  - Add =URL= header to module.
+
 * 1.1.0
 
   - Add =desktop-registry-remove-desktop= command to remove desktops you

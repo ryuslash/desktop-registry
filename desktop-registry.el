@@ -40,6 +40,12 @@
   :group 'desktop-registry
   :type '(repeat (cons string directory)))
 
+(defcustom desktop-registry-list-switch-buffer-function
+  #'switch-to-buffer-other-window
+  "The function to use to switch to the desktop list buffer."
+  :group 'desktop-registry
+  :type 'function)
+
 (defvar desktop-registry--history nil
   "History variable for `desktop-registry'.")
 
@@ -139,6 +145,45 @@ current desktop as default value."
                 'desktop-registry-add-current-desktop)
     (remove-hook 'desktop-save-hook
                  'desktop-registry-add-current-desktop)))
+
+(defun desktop-registry--prepare-row (data)
+  "Format a row of DATA for `tabulated-list-entries'."
+  (let* ((name (car data))
+         (dir (cdr data))
+         (existsp (and (file-exists-p dir)
+                       (file-directory-p dir))))
+    (list name (vector name (if existsp "yes" "no") dir))))
+
+(defun desktop-registry--refresh-list ()
+  "Fill `tabulated-list-entries' with registered desktops."
+  (setq tabulated-list-entries
+        (mapcar #'desktop-registry--prepare-row
+                desktop-registry-registry)))
+
+(define-derived-mode desktop-registry-list-mode tabulated-list-mode
+  "Desktop Registry"
+  "Major mode for listing registered desktops.
+
+\\<desktop-registry-list-mode-map>
+\\{desktop-registry-list-mode-map}"
+  (setq tabulated-list-format [("Label" 30 t)
+                               ("Exists" 6 nil)
+                               ("Location" 0 t)]
+        tabulated-list-sort-key '("Label"))
+  (add-hook 'tabulated-list-revert-hook #'desktop-registry--refresh-list)
+  (tabulated-list-init-header))
+
+;;;###autoload
+(defun desktop-registry-list-desktops ()
+  "Display a list of registered desktops."
+  (interactive)
+  (let ((buffer (get-buffer-create "*Desktop Registry*")))
+    (with-current-buffer buffer
+      (desktop-registry-list-mode)
+      (desktop-registry--refresh-list)
+      (tabulated-list-print))
+    (funcall desktop-registry-list-switch-buffer-function buffer))
+  nil)
 
 (provide 'desktop-registry)
 ;;; desktop-registry.el ends here

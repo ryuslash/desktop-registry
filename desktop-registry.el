@@ -278,7 +278,7 @@ Enabling this global minor mode will add
                                ("Exists" 6 nil)
                                ("Location" 0 t)]
         tabulated-list-sort-key '("Label"))
-  (add-hook 'tabulated-list-revert-hook #'dreg--refresh-list)
+  (add-hook 'tabulated-list-revert-hook #'dreg--refresh-list nil :local)
   (tabulated-list-init-header))
 
 ;;;###autoload

@@ -87,7 +87,7 @@ Returns DEFAULT when `desktop-dirname' is nil."
                      (if (equal current-prefix-arg '(4))
                          (read-string "Name: "))))
   (let* ((clean-dir (desktop-registry--canonicalize-dir dir))
-         (label (or name (file-name-base clean-dir))))
+         (label (or name (file-name-nondirectory clean-dir))))
     (cond
      ((cl-find clean-dir desktop-registry-registry
                :key 'cdr :test 'equal)

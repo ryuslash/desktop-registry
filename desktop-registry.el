@@ -1,10 +1,10 @@
 ;;; desktop-registry.el --- Keep a central registry of desktop files -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013  Tom Willemse
+;; Copyright (C) 2013, 2014  Tom Willemse
 
 ;; Author: Tom Willemse <tom@ryuslash.org>
 ;; Keywords: convenience
-;; Version: 1.1.0
+;; Version: 1.2.0
 ;; URL: http://projects.ryuslash.org/desktop-registry/
 
 ;; This program is free software; you can redistribute it and/or modify

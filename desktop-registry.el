@@ -24,11 +24,49 @@
 ;; This module provides functions and a global minor mode that lets
 ;; you track a central registry of desktop files.  This is useful when
 ;; you use desktop files as project files and want to be able to
-;; switch between them quickly.
+;; easily switch between them.
 
-(require 'desktop)
+;;; Installation
+
+;; This module is available both on Marmalade and MELPA, so if you
+;; have either of those set-up it should be as easy as `M-x
+;; install-package RET desktop-registry RET'.
+
+;;; Usage
+
+;; To start using it you need to have a desktop loaded in Emacs, you
+;; can then use `desktop-registry-add-current-desktop' to register
+;; it.  If you don't have a desktop loaded, you can use
+;; `desktop-registry-add-directory' to add a directory containing an
+;; Emacs desktop.  It is also possible to use
+;; `desktop-registry-auto-register' to have desktops registered
+;; automatically upon saving them.
+
+;; After some desktops have been registered you can switch between
+;; them by using `desktop-registry-change-desktop'.  This will close
+;; the current desktop (without saving) and open the selected one.
+
+;; If it happens that you have accumulated quite a few desktops and
+;; you would like to have an overview of them and perform some
+;; management tasks, `desktop-registry-list-desktops' will show a list
+;; of the registered desktops, along with an indicator if they still
+;; exist on the filesystem.
+
+;;; Configuration
+
+;; Apart from the functions to add, remove and rename desktops, and
+;; the desktop list, it is also possible to use Emacs' customize
+;; interface to change, remove or add desktops in/from/to the registry
+;; with the `desktop-registry-registry' user option.
+
+;; There is also the `desktop-registry-list-switch-buffer-function'
+;; user option that lets you choose which function to use to show the
+;; buffer when calling `desktop-registry-list-desktops'.  By default
+;; this is `switch-to-buffer-other-window'.
 
 ;;; Code:
+
+(require 'desktop)
 
 (defgroup desktop-registry nil
   "Customization group for desktop-registry."
@@ -36,13 +74,23 @@
   :prefix 'desktop-registry)
 
 (defcustom desktop-registry-registry nil
-  "The registry of desktop files."
+  "The main registry of desktop files.
+
+Almost all of the important functions work on this variable.  As
+such it can be edited using these functions, either directly or
+from the desktop list, or using the Emacs customize interface."
   :group 'desktop-registry
   :type '(repeat (cons string directory)))
 
 (defcustom desktop-registry-list-switch-buffer-function
   #'switch-to-buffer-other-window
-  "The function to use to switch to the desktop list buffer."
+  "The function to use to switch to the desktop list buffer.
+
+When `desktop-registry-list-desktops' is called, it uses the
+value of this option to switch to the buffer.  By default it uses
+`switch-to-buffer-other-window', but functions like
+`switch-to-buffer' or `switch-to-buffer-other-frame' are also
+examples of valid functions."
   :group 'desktop-registry
   :type 'function)
 
@@ -72,7 +120,8 @@
 (defun desktop-registry-current-desktop (&optional default)
   "Get the name of the currently loaded desktop.
 
-Returns DEFAULT when `desktop-dirname' is nil."
+Returns DEFAULT when the variable `desktop-dirname' is nil, which
+means there is no desktop currently loaded."
   (if desktop-dirname
       (let ((canonical
              (desktop-registry--canonicalize-dir desktop-dirname)))
@@ -82,7 +131,14 @@ Returns DEFAULT when `desktop-dirname' is nil."
 
 ;;;###autoload
 (defun desktop-registry-add-directory (dir &optional name)
-  "Add DIR to the desktop registry, possibly using NAME."
+  "Add DIR to the desktop registry, possibly using NAME.
+
+If this command is called interactively, the location for DIR is
+requested of the user, and if the universal argument (`C-u') was
+used before calling this command a name will also be requested
+for this directory.  This is useful when the directory name is
+not the project name or when it would result in duplicate entries
+in `desktop-registry-registry'."
   (interactive (list (read-directory-name "Directory: ")
                      (if (equal current-prefix-arg '(4))
                          (read-string "Name: "))))
@@ -102,7 +158,13 @@ Returns DEFAULT when `desktop-dirname' is nil."
 (defun desktop-registry-add-current-desktop (&optional name)
   "Add the currently opened desktop file to `desktop-registry-registry'.
 
-If NAME is specified use that as the name for the registry entry."
+If NAME is specified use that as the name for the registry entry.
+
+If this command is called interactively and the universal
+argument (`C-u') was used before calling this command the name
+will be requested of the user.  This is useful when the directory
+name is not the project name or when it would result in duplicate
+entries in `desktop-registry-registry'."
   (interactive (list (if (equal current-prefix-arg '(4))
                          (read-string "Name: "))))
   (unless desktop-dirname
@@ -137,7 +199,12 @@ point."
 
 ;;;###autoload
 (defun desktop-registry-remove-desktop (desktop)
-  "Remove DESKTOP from the desktop registry."
+  "Remove DESKTOP from the desktop registry.
+
+If this command is called interactively DESKTOP will be inferred
+from the location of the cursor when viewing the desktop list, or
+will be asked of the user (with completion) when the desktop list
+is not currently shown."
   (interactive (list (desktop-registry--get-desktop-name "Remove: " t)))
   (let ((spec (assoc desktop desktop-registry-registry)))
     (if spec
@@ -148,7 +215,12 @@ point."
 
 ;;;###autoload
 (defun desktop-registry-rename-desktop (old new)
-  "Rename desktop OLD to NEW."
+  "Rename desktop OLD to NEW.
+
+If this command is called interactively OLD will be inferred from
+the location of the cursor when viewing the desktop list, or will
+be asked of the user (with completion) when the desktop list is
+not currently shown.  NEW is always asked of the user."
   (interactive (list (desktop-registry--get-desktop-name "Rename: " t)
                      (read-string "to: ")))
   (let ((spec (assoc old desktop-registry-registry)))
@@ -160,13 +232,25 @@ point."
 
 ;;;###autoload
 (defun desktop-registry-change-desktop (name)
-  "Change to the desktop named NAME."
+  "Change to the desktop named NAME.
+
+If this command is called interactively NAME will be inferred
+from the location of the cursor when viewing the desktop list, or
+will be asked of the user (with completion) when the desktop list
+is not currently shown.
+
+This function just calls `desktop-change-dir' with the directory
+attached to NAME."
   (interactive (list (desktop-registry--get-desktop-name "Switch to: ")))
   (desktop-change-dir (cdr (assoc name desktop-registry-registry))))
 
 ;;;###autoload
 (define-minor-mode desktop-registry-auto-register
-  "Automatically add saved desktops to the registry."
+  "Automatically add saved desktops to the registry.
+
+Enabling this global minor mode will add
+`desktop-registry-add-current-desktop' as a hook to
+`desktop-save-hook'."
   :global t
   (if desktop-registry-auto-register
       (add-hook 'desktop-save-hook
@@ -203,7 +287,16 @@ point."
 
 ;;;###autoload
 (defun desktop-registry-list-desktops ()
-  "Display a list of registered desktops."
+  "Display a list of registered desktops.
+
+Most functions that are available as interactive commands
+elsewhere are also specialized to work here.  For example:
+`desktop-registry-change-desktop' will open the desktop under the
+user's cursor when called from this list.
+
+The way the buffer is shown can be customized by specifying a
+function to use in
+`desktop-registry-list-switch-buffer-function'."
   (interactive)
   (let ((buffer (get-buffer-create "*Desktop Registry*")))
     (with-current-buffer buffer

@@ -94,7 +94,7 @@ examples of valid functions."
   :group 'desktop-registry
   :type 'function)
 
-(defvar desktop-registry--history nil
+(defvar dreg--history nil
   "History variable for `desktop-registry'.")
 
 (defvar desktop-registry-list-mode-map
@@ -107,11 +107,11 @@ examples of valid functions."
     (define-key map "A" #'desktop-registry-add-current-desktop)
     map))
 
-(defun desktop-registry--canonicalize-dir (dir)
+(defun dreg--canonicalize-dir (dir)
   "Canonicalize DIR for use."
   (directory-file-name (expand-file-name dir)))
 
-(defun desktop-registry--desktop-in-row ()
+(defun dreg--desktop-in-row ()
   "If `desktop-registry-list-mode' is active, return the current rowid."
   (and (eql major-mode 'desktop-registry-list-mode)
        (tabulated-list-get-id)))
@@ -123,8 +123,7 @@ examples of valid functions."
 Returns DEFAULT when the variable `desktop-dirname' is nil, which
 means there is no desktop currently loaded."
   (if desktop-dirname
-      (let ((canonical
-             (desktop-registry--canonicalize-dir desktop-dirname)))
+      (let ((canonical (dreg--canonicalize-dir desktop-dirname)))
         (car (cl-find-if (lambda (d) (equal (cdr d) canonical))
                          desktop-registry-registry)))
     default))
@@ -142,7 +141,7 @@ in `desktop-registry-registry'."
   (interactive (list (read-directory-name "Directory: ")
                      (if (equal current-prefix-arg '(4))
                          (read-string "Name: "))))
-  (let* ((clean-dir (desktop-registry--canonicalize-dir dir))
+  (let* ((clean-dir (dreg--canonicalize-dir dir))
          (label (or name (file-name-nondirectory clean-dir))))
     (cond
      ((cl-find clean-dir desktop-registry-registry
@@ -171,8 +170,7 @@ entries in `desktop-registry-registry'."
     (error "No desktop loaded"))
   (desktop-registry-add-directory desktop-dirname name))
 
-(defun desktop-registry--completing-read (&optional prompt
-                                                    default-current)
+(defun dreg--completing-read (&optional prompt default-current)
   "Ask the user to pick a desktop directory.
 
 PROMPT specifies the prompt to use when asking, which defaults to
@@ -182,20 +180,18 @@ current desktop as default value."
         (default (and default-current
                       (desktop-registry-current-desktop))))
     (completing-read prompt desktop-registry-registry nil nil nil
-                     'desktop-registry--history default)))
+                     'dreg--history default)))
 
-(defun desktop-registry--get-desktop-name (&optional prompt
-                                                     default-current)
+(defun dreg--get-desktop-name (&optional prompt default-current)
   "Get the name of a desktop.
 
 This is done by either looking at the desktop name at point, in
 case `desktop-registry-list-mode' is active, or asks the user to
 provide a name with completion.  The parameters PROMPT and
-DEFAULT-CURRENT are passed directly to
-`desktop-registry--completing-read' when no desktop is found at
-point."
-  (or (desktop-registry--desktop-in-row)
-      (desktop-registry--completing-read prompt default-current)))
+DEFAULT-CURRENT are passed directly to `dreg--completing-read'
+when no desktop is found at point."
+  (or (dreg--desktop-in-row)
+      (dreg--completing-read prompt default-current)))
 
 ;;;###autoload
 (defun desktop-registry-remove-desktop (desktop)
@@ -205,7 +201,7 @@ If this command is called interactively DESKTOP will be inferred
 from the location of the cursor when viewing the desktop list, or
 will be asked of the user (with completion) when the desktop list
 is not currently shown."
-  (interactive (list (desktop-registry--get-desktop-name "Remove: " t)))
+  (interactive (list (dreg--get-desktop-name "Remove: " t)))
   (let ((spec (assoc desktop desktop-registry-registry)))
     (if spec
         (customize-save-variable
@@ -221,7 +217,7 @@ If this command is called interactively OLD will be inferred from
 the location of the cursor when viewing the desktop list, or will
 be asked of the user (with completion) when the desktop list is
 not currently shown.  NEW is always asked of the user."
-  (interactive (list (desktop-registry--get-desktop-name "Rename: " t)
+  (interactive (list (dreg--get-desktop-name "Rename: " t)
                      (read-string "to: ")))
   (let ((spec (assoc old desktop-registry-registry)))
     (if (not spec)
@@ -241,7 +237,7 @@ is not currently shown.
 
 This function just calls `desktop-change-dir' with the directory
 attached to NAME."
-  (interactive (list (desktop-registry--get-desktop-name "Switch to: ")))
+  (interactive (list (dreg--get-desktop-name "Switch to: ")))
   (desktop-change-dir (cdr (assoc name desktop-registry-registry))))
 
 ;;;###autoload
@@ -258,7 +254,7 @@ Enabling this global minor mode will add
     (remove-hook 'desktop-save-hook
                  'desktop-registry-add-current-desktop)))
 
-(defun desktop-registry--prepare-row (data)
+(defun dreg--prepare-row (data)
   "Format a row of DATA for `tabulated-list-entries'."
   (let* ((name (car data))
          (dir (cdr data))
@@ -266,11 +262,10 @@ Enabling this global minor mode will add
                        (file-directory-p dir))))
     (list name (vector name (if existsp "yes" "no") dir))))
 
-(defun desktop-registry--refresh-list ()
+(defun dreg--refresh-list ()
   "Fill `tabulated-list-entries' with registered desktops."
   (setq tabulated-list-entries
-        (mapcar #'desktop-registry--prepare-row
-                desktop-registry-registry)))
+        (mapcar #'dreg--prepare-row desktop-registry-registry)))
 
 (define-derived-mode desktop-registry-list-mode tabulated-list-mode
   "Desktop Registry"
@@ -282,7 +277,7 @@ Enabling this global minor mode will add
                                ("Exists" 6 nil)
                                ("Location" 0 t)]
         tabulated-list-sort-key '("Label"))
-  (add-hook 'tabulated-list-revert-hook #'desktop-registry--refresh-list)
+  (add-hook 'tabulated-list-revert-hook #'dreg--refresh-list)
   (tabulated-list-init-header))
 
 ;;;###autoload
@@ -301,7 +296,7 @@ function to use in
   (let ((buffer (get-buffer-create "*Desktop Registry*")))
     (with-current-buffer buffer
       (desktop-registry-list-mode)
-      (desktop-registry--refresh-list)
+      (dreg--refresh-list)
       (tabulated-list-print))
     (funcall desktop-registry-list-switch-buffer-function buffer))
   nil)

@@ -94,9 +94,6 @@ examples of valid functions."
   :group 'desktop-registry
   :type 'function)
 
-(defvar dreg--history nil
-  "History variable for `desktop-registry'.")
-
 (defvar desktop-registry-list-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
@@ -107,6 +104,9 @@ examples of valid functions."
     (define-key map "A" #'desktop-registry-add-current-desktop)
     map))
 
+(defvar dreg--history nil
+  "History variable for `desktop-registry'.")
+
 (defun dreg--canonicalize-dir (dir)
   "Canonicalize DIR for use."
   (directory-file-name (expand-file-name dir)))
@@ -115,6 +115,42 @@ examples of valid functions."
   "If `desktop-registry-list-mode' is active, return the current rowid."
   (and (eql major-mode 'desktop-registry-list-mode)
        (tabulated-list-get-id)))
+
+(defun dreg--completing-read (&optional prompt default-current)
+  "Ask the user to pick a desktop directory.
+
+PROMPT specifies the prompt to use when asking, which defaults to
+\"Desktop: \". DEFAULT-CURRENT specifies whether to use the
+current desktop as default value."
+  (let ((prompt (or prompt "Desktop: "))
+        (default (and default-current
+                      (desktop-registry-current-desktop))))
+    (completing-read prompt desktop-registry-registry nil nil nil
+                     'dreg--history default)))
+
+(defun dreg--get-desktop-name (&optional prompt default-current)
+  "Get the name of a desktop.
+
+This is done by either looking at the desktop name at point, in
+case `desktop-registry-list-mode' is active, or asks the user to
+provide a name with completion.  The parameters PROMPT and
+DEFAULT-CURRENT are passed directly to `dreg--completing-read'
+when no desktop is found at point."
+  (or (dreg--desktop-in-row)
+      (dreg--completing-read prompt default-current)))
+
+(defun dreg--prepare-row (data)
+  "Format a row of DATA for `tabulated-list-entries'."
+  (let* ((name (car data))
+         (dir (cdr data))
+         (existsp (and (file-exists-p dir)
+                       (file-directory-p dir))))
+    (list name (vector name (if existsp "yes" "no") dir))))
+
+(defun dreg--refresh-list ()
+  "Fill `tabulated-list-entries' with registered desktops."
+  (setq tabulated-list-entries
+        (mapcar #'dreg--prepare-row desktop-registry-registry)))
 
 ;;;###autoload
 (defun desktop-registry-current-desktop (&optional default)
@@ -169,29 +205,6 @@ entries in `desktop-registry-registry'."
   (unless desktop-dirname
     (error "No desktop loaded"))
   (desktop-registry-add-directory desktop-dirname name))
-
-(defun dreg--completing-read (&optional prompt default-current)
-  "Ask the user to pick a desktop directory.
-
-PROMPT specifies the prompt to use when asking, which defaults to
-\"Desktop: \". DEFAULT-CURRENT specifies whether to use the
-current desktop as default value."
-  (let ((prompt (or prompt "Desktop: "))
-        (default (and default-current
-                      (desktop-registry-current-desktop))))
-    (completing-read prompt desktop-registry-registry nil nil nil
-                     'dreg--history default)))
-
-(defun dreg--get-desktop-name (&optional prompt default-current)
-  "Get the name of a desktop.
-
-This is done by either looking at the desktop name at point, in
-case `desktop-registry-list-mode' is active, or asks the user to
-provide a name with completion.  The parameters PROMPT and
-DEFAULT-CURRENT are passed directly to `dreg--completing-read'
-when no desktop is found at point."
-  (or (dreg--desktop-in-row)
-      (dreg--completing-read prompt default-current)))
 
 ;;;###autoload
 (defun desktop-registry-remove-desktop (desktop)
@@ -253,19 +266,6 @@ Enabling this global minor mode will add
                 'desktop-registry-add-current-desktop)
     (remove-hook 'desktop-save-hook
                  'desktop-registry-add-current-desktop)))
-
-(defun dreg--prepare-row (data)
-  "Format a row of DATA for `tabulated-list-entries'."
-  (let* ((name (car data))
-         (dir (cdr data))
-         (existsp (and (file-exists-p dir)
-                       (file-directory-p dir))))
-    (list name (vector name (if existsp "yes" "no") dir))))
-
-(defun dreg--refresh-list ()
-  "Fill `tabulated-list-entries' with registered desktops."
-  (setq tabulated-list-entries
-        (mapcar #'dreg--prepare-row desktop-registry-registry)))
 
 (define-derived-mode desktop-registry-list-mode tabulated-list-mode
   "Desktop Registry"

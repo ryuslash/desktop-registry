@@ -49,9 +49,24 @@
 (defvar desktop-registry--history nil
   "History variable for `desktop-registry'.")
 
+(defvar desktop-registry-list-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map tabulated-list-mode-map)
+    (define-key map "o" #'desktop-registry-change-desktop)
+    (define-key map "R" #'desktop-registry-rename-desktop)
+    (define-key map "d" #'desktop-registry-remove-desktop)
+    (define-key map "a" #'desktop-registry-add-directory)
+    (define-key map "A" #'desktop-registry-add-current-desktop)
+    map))
+
 (defun desktop-registry--canonicalize-dir (dir)
   "Canonicalize DIR for use."
   (directory-file-name (expand-file-name dir)))
+
+(defun desktop-registry--desktop-in-row ()
+  "If `desktop-registry-list-mode' is active, return the current rowid."
+  (and (eql major-mode 'desktop-registry-list-mode)
+       (tabulated-list-get-id)))
 
 ;;;###autoload
 (defun desktop-registry-current-desktop (&optional default)
@@ -107,10 +122,23 @@ current desktop as default value."
     (completing-read prompt desktop-registry-registry nil nil nil
                      'desktop-registry--history default)))
 
+(defun desktop-registry--get-desktop-name (&optional prompt
+                                                     default-current)
+  "Get the name of a desktop.
+
+This is done by either looking at the desktop name at point, in
+case `desktop-registry-list-mode' is active, or asks the user to
+provide a name with completion.  The parameters PROMPT and
+DEFAULT-CURRENT are passed directly to
+`desktop-registry--completing-read' when no desktop is found at
+point."
+  (or (desktop-registry--desktop-in-row)
+      (desktop-registry--completing-read prompt default-current)))
+
 ;;;###autoload
 (defun desktop-registry-remove-desktop (desktop)
   "Remove DESKTOP from the desktop registry."
-  (interactive (list (desktop-registry--completing-read "Remove: " t)))
+  (interactive (list (desktop-registry--get-desktop-name "Remove: " t)))
   (let ((spec (assoc desktop desktop-registry-registry)))
     (if spec
         (customize-save-variable
@@ -121,7 +149,7 @@ current desktop as default value."
 ;;;###autoload
 (defun desktop-registry-rename-desktop (old new)
   "Rename desktop OLD to NEW."
-  (interactive (list (desktop-registry--completing-read "Rename: " t)
+  (interactive (list (desktop-registry--get-desktop-name "Rename: " t)
                      (read-string "to: ")))
   (let ((spec (assoc old desktop-registry-registry)))
     (if (not spec)
@@ -133,7 +161,7 @@ current desktop as default value."
 ;;;###autoload
 (defun desktop-registry-change-desktop (name)
   "Change to the desktop named NAME."
-  (interactive (list (desktop-registry--completing-read "Switch to: ")))
+  (interactive (list (desktop-registry--get-desktop-name "Switch to: ")))
   (desktop-change-dir (cdr (assoc name desktop-registry-registry))))
 
 ;;;###autoload
